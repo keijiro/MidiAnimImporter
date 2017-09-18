@@ -118,7 +118,7 @@ namespace MidiAnim
             {
                 var curve = _noteCurves[i];
                 if (curve == null) continue;
-                ModifyTangentsForClock(curve);
+                ModifyTangentsForNotes(curve);
                 dest.SetCurve("", typeof(MidiState), "Note[" + i + "]", curve);
             }
 
@@ -153,6 +153,26 @@ namespace MidiAnim
             for (var i = 0; i < curve.length; i++)
             {
                 if (curve[i].value < 0.5f)
+                {
+                    AnimationUtility.SetKeyLeftTangentMode(curve, i, ctan);
+                    AnimationUtility.SetKeyRightTangentMode(curve, i, ltan);
+                }
+                else
+                {
+                    AnimationUtility.SetKeyLeftTangentMode(curve, i, ltan);
+                    AnimationUtility.SetKeyRightTangentMode(curve, i, ctan);
+                }
+            }
+        }
+
+        static void ModifyTangentsForNotes(AnimationCurve curve)
+        {
+            var ctan = AnimationUtility.TangentMode.Constant;
+            var ltan = AnimationUtility.TangentMode.Linear;
+
+            for (var i = 0; i < curve.length; i++)
+            {
+                if (curve[i].value > 0.5f)
                 {
                     AnimationUtility.SetKeyLeftTangentMode(curve, i, ctan);
                     AnimationUtility.SetKeyRightTangentMode(curve, i, ltan);
