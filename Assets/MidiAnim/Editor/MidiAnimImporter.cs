@@ -17,6 +17,7 @@ namespace MidiAnim
             var song = MidiFileLoader.Load(data);
 
             var seq = new MidiTrackSequencer(song.tracks[0], song.division, _bpm);
+            var dt = 60.0f / (song.division * _bpm);
 
             var noteCurves = new AnimationCurve[128];
             var ccCurves = new AnimationCurve[128];
@@ -31,14 +32,12 @@ namespace MidiAnim
 
             for (var time = -1.0f;;)
             {
-                const float deltaTime = 1.0f / 60;
-
                 List<MidiEvent> events;
 
                 if (time >= 0)
                 {
-                    events = seq.Advance(deltaTime);
-                    time += deltaTime;
+                    events = seq.Advance(dt);
+                    time += dt;
                 }
                 else
                 {
@@ -54,14 +53,14 @@ namespace MidiAnim
 
                     beatCount.AddKey(time, beat);
                     if (time > 0)
-                        beatClock.AddKey(time - deltaTime, 1);
+                        beatClock.AddKey(time - dt, 1);
                     beatClock.AddKey(time, 0);
 
                     if (beat % 4 == 0)
                     {
                         barCount.AddKey(time, beat / 4);
                         if (time > 0)
-                            barClock.AddKey(time - deltaTime, 1);
+                            barClock.AddKey(time - dt, 1);
                         barClock.AddKey(time, 0);
                     }
                 }
@@ -80,7 +79,23 @@ namespace MidiAnim
                         }
                         else if ((e.status & 0xf0) == 0x80)
                         {
-                            noteCurves[pitch].AddKey(time, 0);
+                            noteCurves[pitch].AddKey(time - dt, 0);
+                        }
+                        else if ((e.status & 0xf0) == 0xb0)
+                        {
+                            if (ccCurves[pitch] == null)
+                            {
+                                ccCurves[pitch] = new AnimationCurve();
+                                ccCurves[pitch].AddKey(time, e.data2);
+                            }
+                            else
+                            {
+                                var c = ccCurves[pitch];
+                                if (Mathf.Approximately(c[c.length - 1].time, time))
+                                    c.MoveKey(c.length - 1, new Keyframe(time, e.data2));
+                                else
+                                    c.AddKey(time, e.data2);
+                            }
                         }
                     }
                 }
@@ -105,6 +120,13 @@ namespace MidiAnim
                 {
                     ModifyTangentsForClock(noteCurves[i]);
                     clip.SetCurve("", typeof(MidiState), "Note[" + i + "]", noteCurves[i]);
+                }
+
+            for (var i = 0; i < ccCurves.Length; i++)
+                if (ccCurves[i] != null)
+                {
+                    ModifyTangentsForCC(ccCurves[i]);
+                    clip.SetCurve("", typeof(MidiState), "CC[" + i + "]", ccCurves[i]);
                 }
 
             context.SetMainAsset("MIDI", clip);
@@ -140,6 +162,16 @@ namespace MidiAnim
                     AnimationUtility.SetKeyLeftTangentMode(curve, i, ltan);
                     AnimationUtility.SetKeyRightTangentMode(curve, i, ctan);
                 }
+            }
+        }
+
+        void ModifyTangentsForCC(AnimationCurve curve)
+        {
+            var tan = AnimationUtility.TangentMode.Constant;
+            for (var i = 0; i < curve.length; i++)
+            {
+                AnimationUtility.SetKeyLeftTangentMode(curve, i, tan);
+                AnimationUtility.SetKeyRightTangentMode(curve, i, tan);
             }
         }
 
