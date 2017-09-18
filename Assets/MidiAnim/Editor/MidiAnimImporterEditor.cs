@@ -4,6 +4,7 @@ using UnityEditor.Experimental.AssetImporters;
 
 namespace MidiAnim
 {
+    [CanEditMultipleObjects]
     [CustomEditor(typeof(MidiAnimImporter))]
     class MidiAnimImporterEditor : ScriptedImporterEditor
     {

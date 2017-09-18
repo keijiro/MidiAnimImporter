@@ -1,14 +1,18 @@
+//
+// SmfLite - A minimal class library for handling standard MIDI files on Unity.
+// https://github.com/keijiro/smflite
+//
+// Only the namespace was modified to avoid conflicts with other libraries.
+//
+
 using System.Collections.Generic;
 
 namespace MidiAnim
 {
-    // An alias for internal use.
-    using DeltaEventPairList = System.Collections.Generic.List<MidiAnim.MidiTrack.DeltaEventPair>;
-
     //
     // MIDI event
     //
-    public struct MidiEvent
+    internal struct MidiEvent
     {
         #region Public members
 
@@ -36,7 +40,7 @@ namespace MidiAnim
     //
     // Stores only one track (usually a MIDI file contains one or more tracks).
     //
-    public class MidiTrack
+    internal class MidiTrack
     {
         #region Internal data structure
 
@@ -103,7 +107,7 @@ namespace MidiAnim
     //
     // MIDI file container
     //
-    public struct MidiFileContainer
+    internal struct MidiFileContainer
     {
         #region Public members
 
@@ -137,7 +141,7 @@ namespace MidiAnim
     // Works like an enumerator for MIDI events.
     // Note that not only Advance() but also Start() can return MIDI events.
     //
-    public class MidiTrackSequencer
+    internal class MidiTrackSequencer
     {
         #region Public members
 
@@ -203,7 +207,8 @@ namespace MidiAnim
 
         #region Private members
 
-        DeltaEventPairList.Enumerator enumerator;
+        System.Collections.Generic.List<MidiAnim.MidiTrack.DeltaEventPair>
+            .Enumerator enumerator;
         bool playing;
         float pulsePerSecond;
         float pulseToNext;
@@ -217,7 +222,7 @@ namespace MidiAnim
     //
     // Loads an SMF and returns a file container object.
     //
-    public static class MidiFileLoader
+    internal static class MidiFileLoader
     {
         #region Public members
 
