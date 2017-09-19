@@ -1,9 +1,13 @@
+// MidiAnimImporter - MIDI animation importer
+// https://github.com/keijiro/MidiAnimImporter
+
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 
 namespace MidiAnim
 {
+    // Custom inspector UI for MidiAnimImporter
     [CanEditMultipleObjects]
     [CustomEditor(typeof(MidiAnimImporter))]
     class MidiAnimImporterEditor : ScriptedImporterEditor

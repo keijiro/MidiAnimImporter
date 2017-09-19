@@ -1,15 +1,18 @@
-﻿using UnityEngine;
+﻿// MidiAnimImporter - MIDI animation importer
+// https://github.com/keijiro/MidiAnimImporter
+
+using UnityEngine;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
-using System.Collections.Generic;
 using System.IO;
 
 namespace MidiAnim
 {
+    // Scripted importer for MIDI animation files
     [ScriptedImporter(1, "midianim")]
     class MidiAnimImporter : ScriptedImporter
     {
-        public float _bpm = 120;
+        [SerializeField] float _bpm = 120;
 
         public override void OnImportAsset(AssetImportContext context)
         {

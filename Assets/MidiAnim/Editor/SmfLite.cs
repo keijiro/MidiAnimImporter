@@ -1,11 +1,10 @@
-//
-// SmfLite - A minimal class library for handling standard MIDI files on Unity.
+// SmfLite - A minimal class library for handling standard MIDI files on Unity
 // https://github.com/keijiro/smflite
-//
-// Only the namespace was modified to avoid conflicts with other libraries.
-//
 
 using System.Collections.Generic;
+
+// Note: Only the namespace was changed to avoid conflicts with other
+// plugins using SmfLite.
 
 namespace MidiAnim
 {

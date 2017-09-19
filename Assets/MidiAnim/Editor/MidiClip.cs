@@ -1,12 +1,16 @@
+// MidiAnimImporter - MIDI animation importer
+// https://github.com/keijiro/MidiAnimImporter
+
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 
 namespace MidiAnim
 {
-    class MidiClip
+    // MIDI animation clip
+    internal sealed class MidiClip
     {
-        float _bpm;
+        #region Parameter curves
 
         AnimationCurve _beatCount = new AnimationCurve();
         AnimationCurve _beatClock = new AnimationCurve();
@@ -14,12 +18,21 @@ namespace MidiAnim
         AnimationCurve _barCount = new AnimationCurve();
         AnimationCurve _barClock = new AnimationCurve();
 
-        AnimationCurve[] _noteCurves = new AnimationCurve[128];
-        AnimationCurve[] _ccCurves = new AnimationCurve[128];
+        AnimationCurve [] _noteCurves = new AnimationCurve [128];
+        AnimationCurve [] _ccCurves = new AnimationCurve [128];
 
+        #endregion
+
+        #region Private members
+
+        float _bpm;
         int _beat = -1;
 
         const float kDeltaTime = 1.0f / 60;
+
+        #endregion
+
+        #region Public methods
 
         public MidiClip(float bpm)
         {
@@ -53,6 +66,64 @@ namespace MidiAnim
                 _barClock.AddKey(time, 0);
             }
         }
+
+        public void WriteEvents(float time, List<MidiEvent> events)
+        {
+            if (events == null) return;
+
+            foreach (var e in events)
+            {
+                var stat = e.status & 0xf0;
+                var index = e.data1;
+                var value = (float)e.data2 / 127;
+
+                if (stat == 0x90) // Note on
+                    SetNoteKey(index, time, value);
+                else if (stat == 0x80) // Note off
+                    SetNoteKey(index, time - kDeltaTime, 0);
+                else if (stat == 0xb0) // CC
+                    SetCCKey(index, time, value);
+            }
+        }
+
+        public AnimationClip ConvertToAnimationClip()
+        {
+            var dest = new AnimationClip();
+
+            ModifyTangentsForCount(_beatCount);
+            ModifyTangentsForClock(_beatClock);
+
+            dest.SetCurve("", typeof(MidiState), "BeatCount", _beatCount);
+            dest.SetCurve("", typeof(MidiState), "BeatClock", _beatClock);
+
+            ModifyTangentsForCount(_barCount);
+            ModifyTangentsForClock(_barClock);
+
+            dest.SetCurve("", typeof(MidiState), "BarCount", _barCount);
+            dest.SetCurve("", typeof(MidiState), "BarClock", _barClock);
+
+            for (var i = 0; i < _noteCurves.Length; i++)
+            {
+                var curve = _noteCurves[i];
+                if (curve == null) continue;
+                ModifyTangentsForNotes(curve);
+                dest.SetCurve("", typeof(MidiState), "Note[" + i + "]", curve);
+            }
+
+            for (var i = 0; i < _ccCurves.Length; i++)
+            {
+                var curve = _ccCurves[i];
+                if (curve == null) continue;
+                ModifyTangentsForCC(curve);
+                dest.SetCurve("", typeof(MidiState), "CC[" + i + "]", curve);
+            }
+
+            return dest;
+        }
+
+        #endregion
+
+        #region Keyframe utilities
 
         void SetNoteKey(int index, float time, float value)
         {
@@ -89,62 +160,14 @@ namespace MidiAnim
             }
         }
 
-        public void WriteEvents(float time, List<MidiEvent> events)
-        {
-            if (events == null) return;
+        #endregion
 
-            foreach (var e in events)
-            {
-                var stat = e.status & 0xf0;
-                var index = e.data1;
-
-                if (stat == 0x90) // Note on
-                    SetNoteKey(index, time, (float)e.data2 / 127);
-                else if (stat == 0x80) // Note off
-                    SetNoteKey(index, time - kDeltaTime, 0);
-                else if (stat == 0xb0) // CC
-                    SetCCKey(index, time, (float)e.data2 / 127);
-            }
-        }
-
-        public AnimationClip ConvertToAnimationClip()
-        {
-            var dest = new AnimationClip();
-
-            ModifyTangentsForCount(_beatCount);
-            ModifyTangentsForClock(_beatClock);
-            ModifyTangentsForCount(_barCount);
-            ModifyTangentsForClock(_barClock);
-
-            dest.SetCurve("", typeof(MidiState), "BeatCount", _beatCount);
-            dest.SetCurve("", typeof(MidiState), "BeatClock", _beatClock);
-            dest.SetCurve("", typeof(MidiState), "BarCount", _barCount);
-            dest.SetCurve("", typeof(MidiState), "BarClock", _barClock);
-
-            for (var i = 0; i < _noteCurves.Length; i++)
-            {
-                var curve = _noteCurves[i];
-                if (curve == null) continue;
-                ModifyTangentsForNotes(curve);
-                dest.SetCurve("", typeof(MidiState), "Note[" + i + "]", curve);
-            }
-
-            for (var i = 0; i < _ccCurves.Length; i++)
-            {
-                var curve = _ccCurves[i];
-                if (curve == null) continue;
-                ModifyTangentsForCC(curve);
-                dest.SetCurve("", typeof(MidiState), "CC[" + i + "]", curve);
-            }
-
-            return dest;
-        }
-
-        #region Animation curve utilities
+        #region Tangent modifiers
 
         static void ModifyTangentsForCount(AnimationCurve curve)
         {
             var tan = AnimationUtility.TangentMode.Constant;
+
             for (var i = 0; i < curve.length; i++)
             {
                 AnimationUtility.SetKeyLeftTangentMode(curve, i, tan);
@@ -195,6 +218,7 @@ namespace MidiAnim
         static void ModifyTangentsForCC(AnimationCurve curve)
         {
             var tan = AnimationUtility.TangentMode.Linear;
+
             for (var i = 0; i < curve.length; i++)
             {
                 AnimationUtility.SetKeyLeftTangentMode(curve, i, tan);
