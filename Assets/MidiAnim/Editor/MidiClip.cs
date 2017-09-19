@@ -7,7 +7,6 @@ namespace MidiAnim
     class MidiClip
     {
         float _bpm;
-        float _deltaTime;
 
         AnimationCurve _beatCount = new AnimationCurve();
         AnimationCurve _beatClock = new AnimationCurve();
@@ -20,10 +19,11 @@ namespace MidiAnim
 
         int _beat = -1;
 
-        public MidiClip(float bpm, float deltaTime)
+        const float kDeltaTime = 1.0f / 60;
+
+        public MidiClip(float bpm)
         {
             _bpm = bpm;
-            _deltaTime = deltaTime;
         }
 
         public void WriteBeat(float time)
@@ -40,7 +40,7 @@ namespace MidiAnim
             _beatCount.AddKey(time, _beat);
 
             // Beat clock curve
-            if (_beat > 0) _beatClock.AddKey(time - _deltaTime, 1);
+            if (_beat > 0) _beatClock.AddKey(time - kDeltaTime, 1);
             _beatClock.AddKey(time, 0);
 
             if (_beat % 4 == 0)
@@ -49,7 +49,7 @@ namespace MidiAnim
                 _barCount.AddKey(time, _beat / 4);
 
                 // Bar clock curve
-                if (_beat > 0) _barClock.AddKey(time - _deltaTime, 1);
+                if (_beat > 0) _barClock.AddKey(time - kDeltaTime, 1);
                 _barClock.AddKey(time, 0);
             }
         }
@@ -57,7 +57,14 @@ namespace MidiAnim
         void SetNoteKey(int index, float time, float value)
         {
             if (_noteCurves[index] == null)
+            {
                 _noteCurves[index] = new AnimationCurve();
+                _noteCurves[index].AddKey(0, 0); // zeroing key
+            }
+
+            // Avoid adding a key at the first frame.
+            // It's reserved for the zeroing key.
+            if (time == 0) time += kDeltaTime;
 
             _noteCurves[index].AddKey(time, value);
         }
@@ -94,9 +101,9 @@ namespace MidiAnim
                 if (stat == 0x90) // Note on
                     SetNoteKey(index, time, (float)e.data2 / 127);
                 else if (stat == 0x80) // Note off
-                    SetNoteKey(index, time - _deltaTime, 0);
+                    SetNoteKey(index, time - kDeltaTime, 0);
                 else if (stat == 0xb0) // CC
-                    SetCCKey(index, time, e.data2);
+                    SetCCKey(index, time, (float)e.data2 / 127);
             }
         }
 
@@ -187,7 +194,7 @@ namespace MidiAnim
 
         static void ModifyTangentsForCC(AnimationCurve curve)
         {
-            var tan = AnimationUtility.TangentMode.Constant;
+            var tan = AnimationUtility.TangentMode.Linear;
             for (var i = 0; i < curve.length; i++)
             {
                 AnimationUtility.SetKeyLeftTangentMode(curve, i, tan);
