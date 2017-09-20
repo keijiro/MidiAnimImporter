@@ -13,6 +13,9 @@ namespace MidiAnim
     class MidiAnimImporter : ScriptedImporter
     {
         [SerializeField] float _bpm = 120;
+        [SerializeField] bool _easingGate = false;
+        [SerializeField] float _attackTime = 0.1f;
+        [SerializeField] float _releaseTime = 0.3f;
 
         public override void OnImportAsset(AssetImportContext context)
         {
@@ -20,6 +23,7 @@ namespace MidiAnim
             var seq = new MidiTrackSequencer(song.tracks[0], song.division, _bpm);
 
             var clip = new MidiClip(_bpm);
+            if (_easingGate) clip.EnableEasing(_attackTime, _releaseTime);
 
             clip.WriteBeat(0);
             clip.WriteEvents(0, seq.Start());

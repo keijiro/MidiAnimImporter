@@ -28,7 +28,11 @@ namespace MidiAnim
         float _bpm;
         int _beat = -1;
 
+        float _attackTime;
+        float _releaseTime;
+
         const float kDeltaTime = 1.0f / 60;
+        const float kEpsilon = 0.001f;
 
         #endregion
 
@@ -37,6 +41,17 @@ namespace MidiAnim
         public MidiClip(float bpm)
         {
             _bpm = bpm;
+        }
+
+        public void EnableEasing(float attack, float release)
+        {
+            _attackTime = attack;
+            _releaseTime = release;
+        }
+
+        public void DisableEasing()
+        {
+            _attackTime = _releaseTime = 0;
         }
 
         public void WriteBeat(float time)
@@ -107,7 +122,10 @@ namespace MidiAnim
             {
                 var curve = _noteCurves[i];
                 if (curve == null) continue;
-                FlattenTangents(curve);
+                if (_attackTime > 0)
+                    curve = CreateEasedCurve(curve);
+                else
+                    FlattenTangents(curve);
                 dest.SetCurve("", typeof(MidiState), "Note[" + i + "]", curve);
             }
 
@@ -201,6 +219,49 @@ namespace MidiAnim
                     AnimationUtility.SetKeyRightTangentMode(curve, i, ctan);
                 }
             }
+        }
+
+        AnimationCurve CreateEasedCurve(AnimationCurve source)
+        {
+            var curve = new AnimationCurve();
+
+            // Copy the first key.
+            var key0 = source[0];
+            curve.AddKey(new Keyframe(key0.time, key0.value, 0, 0));
+
+            var lastValue = source[0].value;
+
+            for (var i = 1; i < source.length - 1; i++)
+            {
+                var key = source[i];
+                var time = key.time;
+                var value = key.value;
+
+                // Transition time from the settings (attack/release)
+                var transTime = lastValue < value ? _attackTime : _releaseTime;
+
+                // Delay time until it reaches the current value.
+                var delay = transTime * Mathf.Abs(value - lastValue);
+
+                // Clip the delay time with the time of the next key.
+                var nextKeyTime = source[i + 1].time;
+                delay = Mathf.Min(delay, nextKeyTime - time - kEpsilon);
+
+                // Actual difference of values between keys.
+                var delta = Mathf.Sign(value - lastValue) * delay / transTime;
+
+                curve.AddKey(new Keyframe(time, lastValue, 0, 0));
+                curve.AddKey(new Keyframe(time + delay, lastValue + delta, 0, 0));
+
+                lastValue += delta;
+            }
+
+            // Copy the last key.
+            var end = source[source.length - 1].time;
+            curve.AddKey(new Keyframe(end, lastValue, 0, 0));
+            curve.AddKey(new Keyframe(end + lastValue * _releaseTime, 0, 0, 0));
+
+            return curve;
         }
 
         #endregion
