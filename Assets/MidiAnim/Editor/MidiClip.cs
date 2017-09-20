@@ -73,15 +73,15 @@ namespace MidiAnim
 
             foreach (var e in events)
             {
-                var stat = e.status & 0xf0;
+                var status = e.status & 0xf0;
                 var index = e.data1;
                 var value = (float)e.data2 / 127;
 
-                if (stat == 0x90) // Note on
+                if (status == 0x90) // Note on
                     SetNoteKey(index, time, value);
-                else if (stat == 0x80) // Note off
+                else if (status == 0x80) // Note off
                     SetNoteKey(index, time - kDeltaTime, 0);
-                else if (stat == 0xb0) // CC
+                else if (status == 0xb0) // CC
                     SetCCKey(index, time, value);
             }
         }
@@ -90,31 +90,33 @@ namespace MidiAnim
         {
             var dest = new AnimationClip();
 
-            ModifyTangentsForCount(_beatCount);
-            ModifyTangentsForClock(_beatClock);
-
+            // Beat count/clock
+            FlattenTangents(_beatCount);
+            SawtoothTangents(_beatClock);
             dest.SetCurve("", typeof(MidiState), "BeatCount", _beatCount);
             dest.SetCurve("", typeof(MidiState), "BeatClock", _beatClock);
 
-            ModifyTangentsForCount(_barCount);
-            ModifyTangentsForClock(_barClock);
-
+            // Bar count/clock
+            FlattenTangents(_barCount);
+            SawtoothTangents(_barClock);
             dest.SetCurve("", typeof(MidiState), "BarCount", _barCount);
             dest.SetCurve("", typeof(MidiState), "BarClock", _barClock);
 
+            // Note curves
             for (var i = 0; i < _noteCurves.Length; i++)
             {
                 var curve = _noteCurves[i];
                 if (curve == null) continue;
-                ModifyTangentsForNotes(curve);
+                FlattenTangents(curve);
                 dest.SetCurve("", typeof(MidiState), "Note[" + i + "]", curve);
             }
 
+            // CC curves
             for (var i = 0; i < _ccCurves.Length; i++)
             {
                 var curve = _ccCurves[i];
                 if (curve == null) continue;
-                ModifyTangentsForCC(curve);
+                LinearizeTangents(curve);
                 dest.SetCurve("", typeof(MidiState), "CC[" + i + "]", curve);
             }
 
@@ -162,10 +164,9 @@ namespace MidiAnim
 
         #region Tangent modifiers
 
-        static void ModifyTangentsForCount(AnimationCurve curve)
+        static void FlattenTangents(AnimationCurve curve)
         {
             var tan = AnimationUtility.TangentMode.Constant;
-
             for (var i = 0; i < curve.length; i++)
             {
                 AnimationUtility.SetKeyLeftTangentMode(curve, i, tan);
@@ -173,11 +174,20 @@ namespace MidiAnim
             }
         }
 
-        static void ModifyTangentsForClock(AnimationCurve curve)
+        static void LinearizeTangents(AnimationCurve curve)
+        {
+            var tan = AnimationUtility.TangentMode.Linear;
+            for (var i = 0; i < curve.length; i++)
+            {
+                AnimationUtility.SetKeyLeftTangentMode(curve, i, tan);
+                AnimationUtility.SetKeyRightTangentMode(curve, i, tan);
+            }
+        }
+
+        static void SawtoothTangents(AnimationCurve curve)
         {
             var ctan = AnimationUtility.TangentMode.Constant;
             var ltan = AnimationUtility.TangentMode.Linear;
-
             for (var i = 0; i < curve.length; i++)
             {
                 if (curve[i].value < 0.5f)
@@ -190,37 +200,6 @@ namespace MidiAnim
                     AnimationUtility.SetKeyLeftTangentMode(curve, i, ltan);
                     AnimationUtility.SetKeyRightTangentMode(curve, i, ctan);
                 }
-            }
-        }
-
-        static void ModifyTangentsForNotes(AnimationCurve curve)
-        {
-            var ctan = AnimationUtility.TangentMode.Constant;
-            var ltan = AnimationUtility.TangentMode.Linear;
-
-            for (var i = 0; i < curve.length; i++)
-            {
-                if (curve[i].value > 0.5f)
-                {
-                    AnimationUtility.SetKeyLeftTangentMode(curve, i, ctan);
-                    AnimationUtility.SetKeyRightTangentMode(curve, i, ltan);
-                }
-                else
-                {
-                    AnimationUtility.SetKeyLeftTangentMode(curve, i, ltan);
-                    AnimationUtility.SetKeyRightTangentMode(curve, i, ctan);
-                }
-            }
-        }
-
-        static void ModifyTangentsForCC(AnimationCurve curve)
-        {
-            var tan = AnimationUtility.TangentMode.Linear;
-
-            for (var i = 0; i < curve.length; i++)
-            {
-                AnimationUtility.SetKeyLeftTangentMode(curve, i, tan);
-                AnimationUtility.SetKeyRightTangentMode(curve, i, tan);
             }
         }
 
