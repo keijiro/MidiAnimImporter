@@ -13,7 +13,7 @@ namespace MidiAnim
     class MidiAnimImporterEditor : ScriptedImporterEditor
     {
         SerializedProperty _bpm;
-        SerializedProperty _easingGate;
+        SerializedProperty _gateEasing;
         SerializedProperty _attackTime;
         SerializedProperty _releaseTime;
 
@@ -23,13 +23,14 @@ namespace MidiAnim
         }
 
         public override bool showImportedObject { get { return false; } }
+        protected override bool useAssetDrawPreview { get { return false; } }
 
         public override void OnEnable()
         {
             base.OnEnable();
 
             _bpm = serializedObject.FindProperty("_bpm");
-            _easingGate = serializedObject.FindProperty("_easingGate");
+            _gateEasing = serializedObject.FindProperty("_gateEasing");
             _attackTime = serializedObject.FindProperty("_attackTime");
             _releaseTime = serializedObject.FindProperty("_releaseTime");
         }
@@ -37,10 +38,10 @@ namespace MidiAnim
         public override void OnInspectorGUI()
         {
             EditorGUILayout.PropertyField(_bpm, Styles.BPM);
-            EditorGUILayout.PropertyField(_easingGate);
+            EditorGUILayout.PropertyField(_gateEasing);
 
             EditorGUI.BeginDisabledGroup(
-                !_easingGate.boolValue && !_easingGate.hasMultipleDifferentValues
+                !_gateEasing.boolValue && !_gateEasing.hasMultipleDifferentValues
             );
 
             EditorGUI.indentLevel++;
