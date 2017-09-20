@@ -146,17 +146,15 @@ namespace MidiAnim
 
             if (curve == null)
             {
+                // No curve for this CC. Create a new one and add the first key.
                 _ccCurves[index] = new AnimationCurve();
                 _ccCurves[index].AddKey(time, value);
             }
             else
             {
-                // Add a new key, or replace the last key if it's too close.
-                var last = curve.length - 1;
-                if (Mathf.Approximately(curve[last].time, time))
-                    curve.MoveKey(last, new Keyframe(time, value));
-                else
-                    curve.AddKey(time, value);
+                // Avoid adding a key in the same frame.
+                var availFrom = curve[curve.length - 1].time + kDeltaTime;
+                curve.AddKey(Mathf.Max(availFrom, time), value);
             }
         }
 
