@@ -10,8 +10,8 @@ MidiAnimImporter generates three types of animation curves.
 
 - **Beat/Bar Clock** - Indicates the timings of the beats (quarter notes) and
   the bars.
-- **Note Curve** - Indicates the timings of key on/off of each note.
-- **CC Curve** - Represents the animation of each CC (control change) value.
+- **Note Curves** - Indicates the timings of key on/off of each note.
+- **CC Curves** - Represents the animation of each CC (control change) value.
 
 Installation
 ------------
@@ -43,8 +43,8 @@ copy-and-pasted to actual animations.
 Copy-and-paste by hand? No way!
 -------------------------------
 
-Yes. This workflow should be improved in the future versions. If you have a
-good idea for improving it, [toss it to me].
+I think so too. This workflow should be improved in the future versions. If you
+have a good idea for improving it, [toss it to me].
 
 [toss it to me]: https://github.com/keijiro/MidiAnimImporter/issues
 
