@@ -13,6 +13,8 @@ MidiAnimImporter generates three types of animation curves.
 - **Note Curve** - Indicates the timings of key on/off of each note.
 - **CC Curve** - Represents the animation of each CC (control change) value.
 
+[A small example video](http://radiumsoftware.tumblr.com/post/165638886043).
+
 Installation
 ------------
 
