@@ -1,0 +1,8 @@
+{
+    "name": "jp.keijiro.midianim",
+    "displayName": "MIDI Anim Importer",
+    "version": "0.0.1",
+    "unity": "2018.1",
+    "description": "Custom importer for importing .mid files (SMF; Standard MIDI File) into animation clips.",
+    "dependencies": { }
+}
