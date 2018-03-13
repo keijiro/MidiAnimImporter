@@ -1,8 +1,9 @@
 fileFormatVersion: 2
 guid: 9aaa7dadba5f0e7458b446ea16bbc60e
-timeCreated: 1505829153
-licenseType: Pro
 ScriptedImporter:
+  fileIDToRecycleName:
+    7400000: MIDI
+  externalObjects: {}
   userData: 
   assetBundleName: 
   assetBundleVariant: 

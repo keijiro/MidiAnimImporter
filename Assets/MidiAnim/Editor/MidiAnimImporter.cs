@@ -35,7 +35,9 @@ namespace MidiAnim
                 clip.WriteEvents(t, seq.Advance(dt));
             }
 
-            context.SetMainAsset("MIDI", clip.ConvertToAnimationClip());
+            var anim = clip.ConvertToAnimationClip();
+            context.AddObjectToAsset("MIDI", anim);
+            context.SetMainObject(anim);
         }
     }
 }
