@@ -12,6 +12,7 @@ namespace MidiAnim
     [ScriptedImporter(1, "midianim")]
     class MidiAnimImporter : ScriptedImporter
     {
+        [SerializeField] int _trackIndex = 0;
         [SerializeField] float _bpm = 120;
         [SerializeField] bool _gateEasing = false;
         [SerializeField] float _attackTime = 0.1f;
@@ -20,7 +21,7 @@ namespace MidiAnim
         public override void OnImportAsset(AssetImportContext context)
         {
             var song = MidiFileLoader.Load(File.ReadAllBytes(context.assetPath));
-            var seq = new MidiTrackSequencer(song.tracks[0], song.division, _bpm);
+            var seq = new MidiTrackSequencer(song.tracks[_trackIndex], song.division, _bpm);
 
             var clip = new MidiClip(_bpm);
             if (_gateEasing) clip.EnableEasing(_attackTime, _releaseTime);

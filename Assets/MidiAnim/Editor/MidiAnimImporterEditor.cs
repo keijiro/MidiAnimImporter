@@ -12,6 +12,7 @@ namespace MidiAnim
     [CustomEditor(typeof(MidiAnimImporter))]
     class MidiAnimImporterEditor : ScriptedImporterEditor
     {
+        SerializedProperty _trackIndex;
         SerializedProperty _bpm;
         SerializedProperty _gateEasing;
         SerializedProperty _attackTime;
@@ -19,6 +20,7 @@ namespace MidiAnim
 
         static class Styles
         {
+            public static readonly GUIContent TrackIndex = new GUIContent("Track Index");
             public static readonly GUIContent BPM = new GUIContent("BPM");
         }
 
@@ -29,6 +31,7 @@ namespace MidiAnim
         {
             base.OnEnable();
 
+            _trackIndex = serializedObject.FindProperty("_trackIndex");
             _bpm = serializedObject.FindProperty("_bpm");
             _gateEasing = serializedObject.FindProperty("_gateEasing");
             _attackTime = serializedObject.FindProperty("_attackTime");
@@ -37,6 +40,7 @@ namespace MidiAnim
 
         public override void OnInspectorGUI()
         {
+            EditorGUILayout.PropertyField(_trackIndex, Styles.TrackIndex);
             EditorGUILayout.PropertyField(_bpm, Styles.BPM);
             EditorGUILayout.PropertyField(_gateEasing);
 
