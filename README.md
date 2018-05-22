@@ -32,6 +32,7 @@ There are a few settings in the inspector.
 
 ![inspector](https://i.imgur.com/HDWZgX7.png)
 
+- **Track Index** - The MIDI file track index that will be imported.
 - **BPM** - The importer doesn't support the BPM meta information, so that the
   BPM has to be set manually.
 - **Gate Easing** - When enabled, the note curves are to be smoothed by adding
